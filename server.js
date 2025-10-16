@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import serversRouter from "./routes/servers.js";
+import { pool } from "./db/connections.js";
 
 dotenv.config();
 const app = express();
@@ -18,7 +19,15 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/servers", serversRouter);
 
-app.get("/", (req, res) => res.render("pages/index", { title: "Dashboard" })); //index.ejs
+app.get("/", async (req, res) => {
+    try {
+    const result = await pool.query("SELECT * FROM servers ORDER BY created_at DESC");
+    res.render("pages/index", { title: "Dashboard", servers: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.render("pages/index", { title: "Dashboard", servers: [] });
+  }
+});
 
 app.get("/create-server", (req, res) => res.render("pages/create-server", { title: "Create Server" }));
 
