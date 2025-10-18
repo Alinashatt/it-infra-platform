@@ -1,5 +1,7 @@
 .env
-
 *log
-
+terraform/.terraform.lock.hcl
+terraform/.terraform/
 /node_modules
+*.pem
+

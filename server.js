@@ -31,5 +31,5 @@ app.get("/", async (req, res) => {
 
 app.get("/create-server", (req, res) => res.render("pages/create-server", { title: "Create Server" }));
 
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

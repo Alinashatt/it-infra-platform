@@ -3,13 +3,16 @@
 <section>
   <h2>Create New Server</h2>
   <form action="/servers" method="POST">
-    <input type="text" name="name" placeholder="Server Name" required />
+    <input type="text" name="name" placeholder="Server Name" required /> 
 
     <label for="instance_type">Instance Type:</label>
     <select name="instance_type" id="instance_type" required>
       <option value="t2.micro">t2.micro (1GB RAM)</option>
       <option value="t2.medium">t2.medium (4GB RAM)</option>
+      <option value="t3.micro">t3.micro (8GB RAM)</option>
+      <option value="t3.medium">t3.medium (8GB RAM)</option>
       <option value="t3.large">t3.large (8GB RAM)</option>
+
     </select>
 
     <label for="os">Operating System:</label>
@@ -22,6 +25,8 @@
     <select name="region" id="region" required>
       <option value="us-east-1">US East 1</option>
       <option value="eu-central-1">EU Central 1</option>
+      <option value="eu-north-1">EU North 1</option>
+
     </select>
 
     <label for="storage">Storage (GB):</label>
