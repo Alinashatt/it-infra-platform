@@ -5,6 +5,15 @@ import fs from "fs/promises";
 
 const router = express.Router();
 
+async function runTerraform(command) { //function 3awez afhamha aktar 3ala4an wakhedha mn chatgpt
+  return new Promise((resolve, reject) => {  // function bterga3 promise 3awez a3ml await 3aleha
+    exec(command, { cwd: "./terraform", env: process.env }, (err, stdout, stderr) => {
+      if (err) reject(stderr);
+      else resolve(stdout);
+    });
+  });
+}
+
 /**
  steps to create a server:
  1. han3mel post request 3ala /servers
@@ -15,7 +24,7 @@ const router = express.Router();
  */
 
 router.post("/", async (req, res) => { //async de 3ala4an el file writing w database operations asynchronous
-  const { name, instance_type, region, storage, os } = req.body;
+  const { name, instance_type, region, storage, os, apps } = req.body;
 
   try {
     // 1 create malaf terraform.tfvars
@@ -34,16 +43,16 @@ os            = "${os}"
     exec("terraform init", { cwd: "./terraform" }, (initErr, initStdout, initStderr) => {
       if (initErr) {
         console.error("❌ Terraform init error:", initStderr);
-        return res.status(500).send("Terraform init failed"); // lw fe error yeb3at 500 status ele heya internal server error
+        return res.status(500).send("Terraform init failed");
       }
 
       console.log("✅ Terraform initialized!");
 
       // 3. tashgheel terraform apply
       exec(
-        "terraform apply -auto-approve -var-file=terraform.tfvars", // -auto-approve 3ashan ma yesa2alsh 3la confirmation ele heya elmafrod tkon yes
+        "terraform apply -auto-approve -var-file=terraform.tfvars",
         {
-          cwd: "./terraform", // el path elly feeh el terraform files
+          cwd: "./terraform",
           env: {
             ...process.env,
             AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
@@ -59,6 +68,7 @@ os            = "${os}"
           console.log("✅ Terraform apply completed!");
 
           // 4. el output bta3 el terraform in json
+
           exec("terraform output -json", { cwd: "./terraform" }, async (outErr, outStdout, outStderr) => {
             if (outErr) {
               console.error("❌ Terraform output error:", outStderr);
@@ -73,16 +83,55 @@ os            = "${os}"
             }
 
             const instance_id = outputs.instance_id ? outputs.instance_id.value : "unknown";
+            const public_ip = outputs.instance_public_ip ? outputs.instance_public_ip.value : null;
 
-            // 5. insert fel database
+            if (public_ip) {
+              const inventoryContent = `
+[ec2_instances]
+${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh_private_key_file=~/.ssh/myDeffaultKeyPair.pem
+`;
+              await fs.writeFile("./ansible/inventory.ini", inventoryContent);
+              console.log("✅ Ansible inventory.ini created!");
+            }
+
+            // 5. run ansible playbook law fe apps selected
+            setTimeout(() => {  
+              if (apps && apps.length > 0 && public_ip) {
+                console.log("🚀 Running Ansible for apps:", apps);
+                
+                // exec(
+                //   `ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --extra-vars "apps=${JSON.stringify(apps)}"`,
+                //   (err, stdout, stderr) => {
+                //     console.log("📜 ANSIBLE STDOUT:\n", stdout);
+                //     console.log("⚠️ ANSIBLE STDERR:\n", stderr);
+                //     if (err) console.error("❌ Ansible error:", err);
+                //     else console.log("✅ Ansible completed successfully!");
+                //   }
+                // );
+
+                exec(
+                  `ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --extra-vars "apps=${JSON.stringify(apps)}" -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o ConnectTimeout=60"'`,
+                  (err, stdout, stderr) => {
+                    console.log("📜 ANSIBLE STDOUT:\n", stdout);
+                    console.log("⚠️ ANSIBLE STDERR:\n", stderr);
+                    if (err) console.error("❌ Ansible error:", err);
+                    else console.log("✅ Ansible completed successfully!");
+                  }
+                );
+
+
+              }
+            }, 30000); //5 seconds delay 3awez ady el instance wa2t yeb2a ready lel ansible
+            
+            // 6. insert fel database
             try {
               await pool.query(
                 "INSERT INTO servers (name, instance_id, instance_type, region, storage, os, status) VALUES ($1,$2,$3,$4,$5,$6,$7)",
                 [name, instance_id, instance_type, region, storage, os, "running"]
               );
               console.log(`✅ Server ${name} saved to database!`);
-              res.redirect("/"); 
-            } catch (dbErr) { 
+              res.redirect("/");
+            } catch (dbErr) {
               console.error("❌ Database insert error:", dbErr);
               res.status(500).send("Error saving to database");
             }
@@ -90,7 +139,7 @@ os            = "${os}"
         }
       );
     });
-  } catch (err) { // general error handling
+  } catch (err) {
     console.error("❌ General error:", err);
     res.status(500).send("Internal server error");
   }
@@ -106,6 +155,75 @@ router.get("/", async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching servers:", err);
     res.status(500).send("Error fetching servers");
+  }
+});
+
+// GET /servers/:id - Display details of a specific server
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query("SELECT * FROM servers WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).send("Server not found");
+    }
+    res.render("pages/server-details", { title: "Server Details", server: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Error fetching server details:", err);
+    res.status(500).send("Error fetching server details");
+  }
+});
+
+// DELETE SERVER
+router.post("/delete/:id", async (req, res) => {
+  const serverId = req.params.id;
+
+  try {
+    const result = await pool.query("SELECT * FROM servers WHERE id = $1", [serverId]);
+    if (result.rows.length === 0) {
+      return res.status(404).send("Server not found");
+    }
+
+    const server = result.rows[0];
+    const instanceId = server.instance_id;
+    const region = server.region;
+
+    console.log(`🧹 Deleting instance ${instanceId} in region ${region}...`);
+
+    const tfvarsContent = ` 
+name          = "${server.name}"
+instance_type = "${server.instance_type}"
+region        = "${region}"
+storage       = ${server.storage}
+os            = "${server.os}"
+`;
+
+    await fs.writeFile("./terraform/terraform.tfvars", tfvarsContent);
+
+    exec(
+      "terraform destroy -auto-approve -var-file=terraform.tfvars",
+      {
+        cwd: "./terraform",
+        env: {
+          ...process.env,
+          AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+          AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+        },
+      },
+      async (destroyErr, stdout, stderr) => {
+        if (destroyErr) {
+          console.error("❌ Terraform destroy error:", stderr);
+          return res.status(500).send("Terraform destroy failed");
+        }
+
+        console.log("✅ Terraform destroy completed!");
+        await pool.query("DELETE FROM servers WHERE id = $1", [serverId]);
+        console.log(`🗑️ Server ${server.name} removed from database!`);
+        res.redirect("/");
+      }
+    );
+  } catch (err) {
+    console.error("❌ Error deleting server:", err);
+    res.status(500).send("Internal server error");
   }
 });
 

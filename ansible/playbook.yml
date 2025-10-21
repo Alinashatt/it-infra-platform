@@ -1,0 +1,61 @@
+- name: Configure EC2 instance
+  hosts: all
+  become: true
+  vars:
+    selected_apps: "{{ apps | default([]) }}"
+
+  tasks:
+    - name: Update system packages
+      package:
+        name: "*"
+        state: latest
+
+    - name: Install Nginx
+      when: "'nginx' in selected_apps"
+      package:
+        name: nginx
+        state: present
+
+    - name: Install Docker
+      when: "'docker' in selected_apps"
+      block:
+        - name: Install dependencies
+          apt:
+            name:
+              - apt-transport-https
+              - ca-certificates
+              - curl
+              - software-properties-common
+            state: present
+            update_cache: yes
+
+        - name: Add Docker GPG key
+          shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+        - name: Add Docker repo
+          shell: echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable" | sudo tee /etc/apt/sources.list.d/docker.list
+
+        - name: Install Docker engine
+          apt:
+            name: docker-ce
+            state: present
+            update_cache: yes
+
+        - name: Enable and start Docker
+          systemd:
+            name: docker
+            enabled: true
+            state: started
+
+    - name: Install Node.js
+      when: "'nodejs' in selected_apps"
+      apt:
+        name: nodejs
+        state: present
+        update_cache: yes
+
+    - name: Install Python
+      when: "'python' in selected_apps"
+      apt:
+        name: python3
+        state: present

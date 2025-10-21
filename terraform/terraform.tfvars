@@ -1,6 +1,6 @@
  
-name          = "firstone"
+name          = "zzzzzzzzzz"
 instance_type = "t3.micro"
 region        = "eu-north-1"
 storage       = 8
-os            = "amazon-linux"
+os            = "ubuntu"

@@ -26,11 +26,17 @@
       <option value="us-east-1">US East 1</option>
       <option value="eu-central-1">EU Central 1</option>
       <option value="eu-north-1">EU North 1</option>
-
     </select>
 
     <label for="storage">Storage (GB):</label>
     <input type="number" name="storage" id="storage" placeholder="Storage (GB)" min="8" value="8" required />
+
+    <label>Applications to Install:</label><br>
+    <input type="checkbox" name="apps" value="nginx"> Nginx<br>
+    <input type="checkbox" name="apps" value="docker"> Docker<br>
+    <input type="checkbox" name="apps" value="nodejs"> Node.js<br>
+    <input type="checkbox" name="apps" value="python"> Python<br>
+
 
     <button type="submit">Create Server</button>
   </form>

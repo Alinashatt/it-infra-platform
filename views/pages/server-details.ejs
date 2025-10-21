@@ -1,0 +1,24 @@
+<%- include('../partials/header.ejs') %>
+
+<section>
+  <h2>Server Details</h2>
+
+  <% if (server) { %>
+    <ul>
+      <li><strong>Name:</strong> <%= server.name %></li>
+      <li><strong>Instance ID:</strong> <%= server.instance_id %></li>
+      <li><strong>Type:</strong> <%= server.instance_type %></li>
+      <li><strong>Region:</strong> <%= server.region %></li>
+      <li><strong>Storage:</strong> <%= server.storage %> GB</li>
+      <li><strong>OS:</strong> <%= server.os %></li>
+      <li><strong>Status:</strong> <%= server.status %></li>
+      <li><strong>Created At:</strong> <%= server.created_at.toLocaleString() %></li>
+    </ul>
+
+    <a href="/">⬅ Back to Dashboard</a>
+  <% } else { %>
+    <p>Server not found.</p>
+  <% } %>
+</section>
+
+<%- include('../partials/footer.ejs') %>
