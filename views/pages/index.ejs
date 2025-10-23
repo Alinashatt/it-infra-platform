@@ -11,11 +11,6 @@
           <strong><%= server.name %></strong> — <%= server.status %> 
           (<%= server.instance_type %>, <%= server.region %>)
 
-          <!-- delete button-->
-          <form action="/servers/delete/<%= server.id %>" method="POST" style="display:inline;">
-            <button type="submit">Delete</button>
-          </form>
-
           <!-- servers details link-->
           <a href="/servers/<%= server.id %>">View</a>
         </li>

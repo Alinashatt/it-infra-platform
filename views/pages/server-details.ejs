@@ -24,6 +24,10 @@
     class="btn btn-dark mt-3" target="_blank">
     Open SSH Terminal
   </a>
+  <!-- delete button-->
+  <form action="/servers/delete/<%= server.id %>" method="POST" style="display:inline;">
+    <button type="submit">Delete</button>
+  </form>
 
 </section>
 

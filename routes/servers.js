@@ -38,10 +38,16 @@ os            = "${os}"
 
     await fs.writeFile("./terraform/terraform.tfvars", tfvarsContent);
     console.log("✅ terraform.tfvars created!");
+    
+    await pool.query(
+      "INSERT INTO servers (name, instance_type, region, storage, os, status) VALUES ($1,$2,$3,$4,$5,$6)",
+      [name, instance_type, region, storage, os, "provisioning"]
+    );
 
     // 2 tashgheel terraform init
-    exec("terraform init", { cwd: "./terraform" }, (initErr, initStdout, initStderr) => {
+    exec("terraform init", { cwd: "./terraform" }, async (initErr, initStdout, initStderr) => {
       if (initErr) {
+        await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
         console.error("❌ Terraform init error:", initStderr);
         return res.status(500).send("Terraform init failed");
       }
@@ -61,16 +67,18 @@ os            = "${os}"
         },
         async (applyErr, stdout, stderr) => {
           if (applyErr) {
+            await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
             console.error("❌ Terraform apply error:", stderr);
             return res.status(500).send("Terraform apply failed");
           }
 
           console.log("✅ Terraform apply completed!");
-
+          await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["configuring", name]);
           // 4. el output bta3 el terraform in json
 
           exec("terraform output -json", { cwd: "./terraform" }, async (outErr, outStdout, outStderr) => {
             if (outErr) {
+              await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
               console.error("❌ Terraform output error:", outStderr);
               return res.status(500).send("Terraform output failed");
             }
@@ -79,6 +87,7 @@ os            = "${os}"
             try {
               outputs = JSON.parse(outStdout.trim());
             } catch (parseErr) {
+              await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
               console.error("❌ Failed to parse Terraform output:", parseErr);
             }
 
@@ -93,7 +102,7 @@ ${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh
               await fs.writeFile("./ansible/inventory.ini", inventoryContent);
               console.log("✅ Ansible inventory.ini created!");
             }
-
+            
             // 5. run ansible playbook law fe apps selected
             setTimeout(() => {  
               if (apps && apps.length > 0 && public_ip) {
@@ -111,11 +120,18 @@ ${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh
 
                 exec(
                   `ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --extra-vars "apps=${JSON.stringify(apps)}" -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o ConnectTimeout=60"'`,
-                  (err, stdout, stderr) => {
+                  async (err, stdout, stderr) => {
                     console.log("📜 ANSIBLE STDOUT:\n", stdout);
                     console.log("⚠️ ANSIBLE STDERR:\n", stderr);
-                    if (err) console.error("❌ Ansible error:", err);
-                    else console.log("✅ Ansible completed successfully!");
+                    if (err) {
+                      console.error("❌ Ansible error:", err);
+                    
+                      await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
+                    
+                    } else {
+                      console.log("✅ Ansible completed successfully!");
+                      await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["running", name]);
+                    }
                   }
                 );
 
@@ -131,12 +147,12 @@ ${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh
             `;
               await fs.writeFile("./ansible/inventory.ini", inventoryContent);
               console.log("✅ Ansible inventory.ini created!");
-
+              
               // 💾 Save server after getting public_ip
               try {
                 await pool.query(
-                  "INSERT INTO servers (name, instance_id, instance_type, region, storage, os, status, public_ip) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-                  [name, instance_id, instance_type, region, storage, os, "running", public_ip]
+                  "UPDATE servers SET instance_id=$1, public_ip=$2, status=$3 WHERE name=$4",
+                  [instance_id, public_ip, "running", name]
                 );
                 console.log(`✅ Server ${name} saved to database!`);
                 res.redirect("/");
@@ -223,6 +239,7 @@ os            = "${server.os}"
       async (destroyErr, stdout, stderr) => {
         if (destroyErr) {
           console.error("❌ Terraform destroy error:", stderr);
+          await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
           return res.status(500).send("Terraform destroy failed");
         }
 
