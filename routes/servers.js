@@ -124,17 +124,28 @@ ${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh
             }, 30000); //5 seconds delay 3awez ady el instance wa2t yeb2a ready lel ansible
             
             // 6. insert fel database
-            try {
-              await pool.query(
-                "INSERT INTO servers (name, instance_id, instance_type, region, storage, os, status) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-                [name, instance_id, instance_type, region, storage, os, "running"]
-              );
-              console.log(`✅ Server ${name} saved to database!`);
-              res.redirect("/");
-            } catch (dbErr) {
-              console.error("❌ Database insert error:", dbErr);
-              res.status(500).send("Error saving to database");
+            if (public_ip) {
+              const inventoryContent = `
+            [ec2_instances]
+            ${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh_private_key_file=~/.ssh/myDeffaultKeyPair.pem
+            `;
+              await fs.writeFile("./ansible/inventory.ini", inventoryContent);
+              console.log("✅ Ansible inventory.ini created!");
+
+              // 💾 Save server after getting public_ip
+              try {
+                await pool.query(
+                  "INSERT INTO servers (name, instance_id, instance_type, region, storage, os, status, public_ip) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+                  [name, instance_id, instance_type, region, storage, os, "running", public_ip]
+                );
+                console.log(`✅ Server ${name} saved to database!`);
+                res.redirect("/");
+              } catch (dbErr) {
+                console.error("❌ Database insert error:", dbErr);
+                res.status(500).send("Error saving to database");
+              }
             }
+
           });
         }
       );
@@ -224,6 +235,27 @@ os            = "${server.os}"
   } catch (err) {
     console.error("❌ Error deleting server:", err);
     res.status(500).send("Internal server error");
+  }
+});
+
+router.get("/:id/ssh", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query("SELECT * FROM servers WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).send("Server not found");
+    }
+
+    const server = result.rows[0];
+    res.render("pages/ssh-terminal", {
+      title: `SSH to ${server.name}`,
+      ip: server.public_ip,
+      username: server.os === "ubuntu" ? "ubuntu" : "ec2-user",
+    });
+  } catch (err) {
+    console.error("❌ Error loading SSH terminal:", err);
+    res.status(500).send("Error loading SSH terminal");
   }
 });
 

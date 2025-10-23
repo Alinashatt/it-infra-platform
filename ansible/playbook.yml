@@ -2,60 +2,82 @@
   hosts: all
   become: true
   vars:
-    selected_apps: "{{ apps | default([]) }}"
+    selected_apps: "{{ apps | default([]) }}"  # دي بتيجي من الـ Node.js app
 
   tasks:
+    # 🧱 تحديث النظام
     - name: Update system packages
       package:
         name: "*"
         state: latest
 
+    # 🌐 تمكين repo الخاص بـ Nginx على Amazon Linux
+    - name: Enable Nginx repository on Amazon Linux
+      when: ansible_distribution == "Amazon"
+      command: amazon-linux-extras enable nginx1
+      ignore_errors: yes  # علشان لو هو enabled قبل كده ما يوقفش التنفيذ
+
+    # 🌐 Install Nginx
     - name: Install Nginx
       when: "'nginx' in selected_apps"
       package:
         name: nginx
         state: present
+      ignore_errors: yes
 
-    - name: Install Docker
+    # 🐳 Install Docker (Amazon + Ubuntu)
+    - name: Install dependencies for Docker
       when: "'docker' in selected_apps"
-      block:
-        - name: Install dependencies
-          apt:
-            name:
-              - apt-transport-https
-              - ca-certificates
-              - curl
-              - software-properties-common
-            state: present
-            update_cache: yes
+      package:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+      ignore_errors: yes
 
-        - name: Add Docker GPG key
-          shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    - name: Add Docker GPG key
+      when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
+      command: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      ignore_errors: yes
 
-        - name: Add Docker repo
-          shell: echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable" | sudo tee /etc/apt/sources.list.d/docker.list
+    - name: Add Docker repository (Ubuntu only)
+      when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
+      command: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+      ignore_errors: yes
 
-        - name: Install Docker engine
-          apt:
-            name: docker-ce
-            state: present
-            update_cache: yes
+    - name: Add Docker repo (Amazon Linux)
+      when: "'docker' in selected_apps and ansible_distribution == 'Amazon'"
+      command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      ignore_errors: yes
 
-        - name: Enable and start Docker
-          systemd:
-            name: docker
-            enabled: true
-            state: started
+    - name: Install Docker engine
+      when: "'docker' in selected_apps"
+      package:
+        name: docker
+        state: present
+      ignore_errors: yes
 
+    - name: Enable and start Docker
+      when: "'docker' in selected_apps"
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    # 🟢 Install Node.js
     - name: Install Node.js
       when: "'nodejs' in selected_apps"
-      apt:
+      package:
         name: nodejs
         state: present
-        update_cache: yes
+      ignore_errors: yes
 
+    # 🐍 Install Python
     - name: Install Python
       when: "'python' in selected_apps"
-      apt:
+      package:
         name: python3
         state: present
+      ignore_errors: yes

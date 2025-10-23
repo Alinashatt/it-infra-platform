@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SSH Terminal</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+      body {
+        background: #111;
+        margin: 0;
+      }
+      #terminal {
+        height: 100vh;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+
+    <script>
+      // Franco comments عشان تفهم كل جزء
+      const socket = io("http://localhost:5001"); // connect le backend
+      const term = new Terminal();
+      term.open(document.getElementById("terminal"));
+
+      const params = new URLSearchParams(window.location.search);
+      const host = params.get("ip");
+      const username = params.get("user") || "ubuntu";
+
+      // buffer hayekoon feh el command lel line mode
+      let cmdBuffer = "";
+
+      // start ssh connection (beba3at host, username, w path lel key)
+      socket.emit("start-ssh", {
+        host,
+        username,
+        privateKeyPath: "/home/anashat/.ssh/myDeffaultKeyPair.pem",
+      });
+
+      // lma yegi output men backend, nektbo fel terminal
+      socket.on("data", (data) => {
+        term.write(data);
+      });
+
+      // ============================
+      // Line-mode input handling
+      // ============================
+      // el onKey haydiena object fih key info (ashya zyada men onData)
+      term.onKey(e => {
+        const key = e.key;
+        const domEvent = e.domEvent;
+
+        // 1) Enter -> send the full buffer as a command
+        if (domEvent.key === "Enter") {
+          term.write("\r\n");              // newline fel terminal client
+          socket.emit("command", cmdBuffer); // b2ol lel backend yektb el line
+          cmdBuffer = "";                  // reset buffer
+          return;
+        }
+
+        // 2) Backspace -> remove char men buffer w update display
+        if (domEvent.key === "Backspace") {
+          // remove last char men buffer
+          if (cmdBuffer.length > 0) {
+            cmdBuffer = cmdBuffer.slice(0, -1);
+            // move cursor back, erase char, move cursor back (typical terminal)
+            term.write("\b \b");
+          }
+          return;
+        }
+
+        // 3) Ctrl+C -> send SIGINT-like (send ^C)
+        if (domEvent.ctrlKey && domEvent.key === "c") {
+          term.write("^C\r\n");
+          socket.emit("command", "\x03"); // ETX (Ctrl+C)
+          cmdBuffer = "";
+          return;
+        }
+
+        // 4) Printable characters -> append to buffer and echo
+        // we ignore special keys like Arrow keys here (for simplicity)
+        if (key.length === 1 && !domEvent.ctrlKey && !domEvent.metaKey) {
+          cmdBuffer += key;
+          term.write(key); // echo character locally
+        }
+      });
+
+      // ============================
+      // Optional: if you want raw passthrough mode (interactive),
+      // add a toggle button that switches to passthrough:
+      // - when enabled: send each keystroke directly: socket.emit("command", data)
+      // - when disabled: use line-mode buffer above
+      //
+      // I can add this toggle UI if you want.
+      // ============================
+    </script>
+  </body>
+</html>

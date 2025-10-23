@@ -19,6 +19,12 @@
   <% } else { %>
     <p>Server not found.</p>
   <% } %>
+    
+  <a href="/servers/<%= server.id %>/ssh?ip=<%= server.public_ip %>&user=<%= server.os === 'ubuntu' ? 'ubuntu' : 'ec2-user' %>" 
+    class="btn btn-dark mt-3" target="_blank">
+    Open SSH Terminal
+  </a>
+
 </section>
 
 <%- include('../partials/footer.ejs') %>
