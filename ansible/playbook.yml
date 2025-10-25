@@ -15,7 +15,7 @@
     - name: Enable Nginx repository on Amazon Linux
       when: ansible_distribution == "Amazon"
       command: amazon-linux-extras enable nginx1
-      ignore_errors: yes  # علشان لو هو enabled قبل كده ما يوقفش التنفيذ
+      ignore_errors: yes
 
     # 🌐 Install Nginx
     - name: Install Nginx
@@ -25,9 +25,17 @@
         state: present
       ignore_errors: yes
 
-    # 🐳 Install Docker (Amazon + Ubuntu)
-    - name: Install dependencies for Docker
-      when: "'docker' in selected_apps"
+    - name: Enable and start Nginx
+      when: "'nginx' in selected_apps"
+      service:
+        name: nginx
+        state: started
+        enabled: true
+      ignore_errors: yes
+
+    # 🐳 Install Docker
+    - name: Install dependencies for Docker (Ubuntu)
+      when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
       package:
         name:
           - apt-transport-https
@@ -37,14 +45,29 @@
         state: present
       ignore_errors: yes
 
-    - name: Add Docker GPG key
-      when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
-      command: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    - name: Install dependencies for Docker (Amazon)
+      when: "'docker' in selected_apps and ansible_distribution == 'Amazon'"
+      package:
+        name:
+          - yum-utils
+          - curl
+        state: present
       ignore_errors: yes
 
-    - name: Add Docker repository (Ubuntu only)
+    - name: Add Docker GPG key (Ubuntu)
       when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
-      command: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+      ignore_errors: yes
+
+    - name: Add Docker repository (Ubuntu)
+      when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
+      shell: add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+      ignore_errors: yes
+
+    - name: Update apt cache after adding Docker repo (Ubuntu)
+      when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
+      apt:
+        update_cache: yes
       ignore_errors: yes
 
     - name: Add Docker repo (Amazon Linux)
@@ -59,12 +82,13 @@
         state: present
       ignore_errors: yes
 
-    - name: Enable and start Docker
+    - name: Enable and start Docker service
       when: "'docker' in selected_apps"
       service:
         name: docker
         state: started
         enabled: true
+      ignore_errors: yes
 
     # 🟢 Install Node.js
     - name: Install Node.js
@@ -81,3 +105,17 @@
         name: python3
         state: present
       ignore_errors: yes
+
+    # 🧪 Verification step
+    - name: Check installed applications
+      shell: |
+        echo "------ INSTALLED VERSIONS ------"
+        if command -v docker >/dev/null 2>&1; then docker --version; fi
+        if command -v node >/dev/null 2>&1; then node -v; fi
+        if command -v python3 >/dev/null 2>&1; then python3 --version; fi
+      register: version_check
+      ignore_errors: yes
+
+    - name: Show verification results
+      debug:
+        msg: "{{ version_check.stdout_lines }}"

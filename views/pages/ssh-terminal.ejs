@@ -24,8 +24,7 @@
     <div id="terminal"></div>
 
     <script>
-      // Franco comments عشان تفهم كل جزء
-      const socket = io("http://localhost:5001"); // connect le backend
+      const socket = io("http://localhost:5001");
       const term = new Terminal();
       term.open(document.getElementById("terminal"));
 
@@ -33,61 +32,56 @@
       const host = params.get("ip");
       const username = params.get("user") || "ubuntu";
 
-      // buffer hayekoon feh el command lel line mode
+      
       let cmdBuffer = "";
 
-      // start ssh connection (beba3at host, username, w path lel key)
+      
       socket.emit("start-ssh", {
         host,
         username,
         privateKeyPath: "/home/anashat/.ssh/myDeffaultKeyPair.pem",
       });
 
-      // lma yegi output men backend, nektbo fel terminal
+      
       socket.on("data", (data) => {
         term.write(data);
       });
 
-      // ============================
-      // Line-mode input handling
-      // ============================
-      // el onKey haydiena object fih key info (ashya zyada men onData)
       term.onKey(e => {
         const key = e.key;
         const domEvent = e.domEvent;
 
-        // 1) Enter -> send the full buffer as a command
+        
         if (domEvent.key === "Enter") {
-          term.write("\r\n");              // newline fel terminal client
-          socket.emit("command", cmdBuffer); // b2ol lel backend yektb el line
-          cmdBuffer = "";                  // reset buffer
+          term.write("\r\n");              
+          socket.emit("command", cmdBuffer); 
+          cmdBuffer = "";                  
           return;
         }
 
-        // 2) Backspace -> remove char men buffer w update display
+        
         if (domEvent.key === "Backspace") {
-          // remove last char men buffer
+          
           if (cmdBuffer.length > 0) {
             cmdBuffer = cmdBuffer.slice(0, -1);
-            // move cursor back, erase char, move cursor back (typical terminal)
+      
             term.write("\b \b");
           }
           return;
         }
 
-        // 3) Ctrl+C -> send SIGINT-like (send ^C)
+      
         if (domEvent.ctrlKey && domEvent.key === "c") {
           term.write("^C\r\n");
-          socket.emit("command", "\x03"); // ETX (Ctrl+C)
+          socket.emit("command", "\x03"); 
           cmdBuffer = "";
           return;
         }
 
-        // 4) Printable characters -> append to buffer and echo
-        // we ignore special keys like Arrow keys here (for simplicity)
+
         if (key.length === 1 && !domEvent.ctrlKey && !domEvent.metaKey) {
           cmdBuffer += key;
-          term.write(key); // echo character locally
+          term.write(key);
         }
       });
 

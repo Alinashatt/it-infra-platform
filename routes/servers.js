@@ -95,10 +95,7 @@ os            = "${os}"
             const public_ip = outputs.instance_public_ip ? outputs.instance_public_ip.value : null;
 
             if (public_ip) {
-              const inventoryContent = `
-[ec2_instances]
-${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh_private_key_file=~/.ssh/myDeffaultKeyPair.pem
-`;
+              const inventoryContent = `[ec2_instances]${public_ip} ansible_user=${os === "ubuntu" ? "ubuntu" : "ec2-user"} ansible_ssh_private_key_file=~/.ssh/myDeffaultKeyPair.pem`;
               await fs.writeFile("./ansible/inventory.ini", inventoryContent);
               console.log("✅ Ansible inventory.ini created!");
             }
