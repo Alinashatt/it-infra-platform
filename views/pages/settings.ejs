@@ -1,6 +1,29 @@
 <%- include('../partials/header.ejs') %>
-<section>
-    <h2>Settings</h2>
-    <p>Manage AWS Credentials and configuration here.</p>
-  </section>
+
+<section class="container mt-5">
+  <h2>⚙️ AWS Settings</h2>
+  <p class="text-muted">Update your AWS credentials below</p>
+
+  <form action="/settings/update" method="POST" class="mt-4">
+    <div class="mb-3">
+      <label class="form-label">AWS Access Key</label>
+      <input type="text" class="form-control" name="awsAccessKey" value="<%= awsAccessKey %>" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">AWS Secret Key</label>
+      <input type="password" class="form-control" name="awsSecretKey" value="<%= awsSecretKey %>" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">AWS Region</label>
+      <input type="text" class="form-control" name="awsRegion" value="<%= awsRegion %>" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+  </form>
+
+  <a href="/" class="btn btn-dark mt-3">⬅ Back to Dashboard</a>
+</section>
+
 <%- include('../partials/footer.ejs') %>

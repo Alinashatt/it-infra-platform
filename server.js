@@ -15,6 +15,9 @@ import monitoringRoutes from "./routes/monitoring.js"; // import monitoring rout
 import backupRoutes from "./routes/backup.js";
 import restoreRoutes from "./routes/restore.js";
 
+import settingsRoutes from "./routes/settings.js";
+
+
 
 
 dotenv.config();
@@ -35,6 +38,7 @@ app.use("/servers", serversRouter);
 app.use("/monitor", monitoringRoutes); // ✅ هنا مكانها الصح بعد تعريف app
 app.use("/aws", backupRoutes);
 app.use("/restore", restoreRoutes);
+app.use("/settings", settingsRoutes);
 
 // 🏠 الصفحة الرئيسية
 app.get("/", async (req, res) => {
