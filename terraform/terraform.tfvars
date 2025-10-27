@@ -1,5 +1,5 @@
  
-name          = "NDServer"
+name          = "testServer"
 instance_type = "t3.micro"
 region        = "eu-north-1"
 storage       = 8

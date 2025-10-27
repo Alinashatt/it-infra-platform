@@ -1,0 +1,118 @@
+<%- include('../partials/header.ejs') %>
+
+<section class="container mt-4">
+  <h2>📊 Server Monitoring Dashboard</h2>
+  <p class="text-muted">Real-time metrics from AWS CloudWatch</p>
+
+  <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+    <button id="refreshBtn" class="btn btn-dark">🔄 Refresh Data</button>
+    <span id="lastUpdated" class="text-muted small"></span>
+  </div>
+
+  <div class="mt-4">
+    <canvas id="cpuChart"></canvas>
+  </div>
+  <div class="mt-4">
+    <canvas id="networkChart"></canvas>
+  </div>
+
+  <a href="/" class="btn btn-secondary mt-4">⬅ Back to Dashboard</a>
+</section>
+
+<!-- ✅ نحفظ البيانات القادمة من السيرفر في سكريبت آمن -->
+<script id="metrics-data" type="application/json">
+  <%- JSON.stringify(metrics || {}) %>
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const serverId = "<%= serverId || '' %>"; // هنمرر الـ ID من الـ route بعدين
+  const raw = document.getElementById("metrics-data").textContent;
+  let data = {};
+
+  try {
+    data = JSON.parse(raw);
+  } catch (err) {
+    console.error("Error parsing metrics:", err);
+  }
+
+  const cpuCtx = document.getElementById("cpuChart").getContext("2d");
+  const netCtx = document.getElementById("networkChart").getContext("2d");
+
+  let cpuChart, netChart;
+
+  // 🧠 دالة عامة ترسم الشارتات
+  function renderCharts(data) {
+    document.getElementById("lastUpdated").textContent =
+      "Last updated: " + new Date().toLocaleTimeString();
+
+    if (cpuChart) cpuChart.destroy();
+    if (netChart) netChart.destroy();
+
+    if (data.CPUUtilization) {
+      cpuChart = new Chart(cpuCtx, {
+        type: "line",
+        data: {
+          labels: data.CPUUtilization.map(p => new Date(p.Timestamp).toLocaleTimeString()),
+          datasets: [{
+            label: "CPU Utilization (%)",
+            data: data.CPUUtilization.map(p => p.Average),
+            borderColor: "rgb(255, 99, 132)",
+            tension: 0.3
+          }]
+        }
+      });
+    }
+
+    if (data.NetworkIn && data.NetworkOut) {
+      netChart = new Chart(netCtx, {
+        type: "line",
+        data: {
+          labels: data.NetworkIn.map(p => new Date(p.Timestamp).toLocaleTimeString()),
+          datasets: [
+            {
+              label: "Network In (Bytes)",
+              data: data.NetworkIn.map(p => p.Sum),
+              borderColor: "rgb(54, 162, 235)",
+              tension: 0.3
+            },
+            {
+              label: "Network Out (Bytes)",
+              data: data.NetworkOut.map(p => p.Sum),
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.3
+            }
+          ]
+        }
+      });
+    }
+  }
+
+  renderCharts(data);
+
+  // 🔄 دالة لجلب البيانات من السيرفر بدون ما نعمل reload
+  async function fetchMetrics() {
+    try {
+      const res = await fetch(`/monitor/${serverId}`);
+      const html = await res.text();
+
+      // نقرأ البيانات من داخل سكريبت JSON في الصفحة الجديدة
+      const temp = document.createElement("div");
+      temp.innerHTML = html;
+      const newRaw = temp.querySelector("#metrics-data").textContent;
+      const newData = JSON.parse(newRaw);
+
+      renderCharts(newData);
+    } catch (err) {
+      console.error("Error fetching metrics:", err);
+    }
+  }
+
+  // 🔘 زر Refresh يدوي
+  document.getElementById("refreshBtn").addEventListener("click", fetchMetrics);
+
+  // ⏰ تحديث تلقائي كل 60 ثانية
+  setInterval(fetchMetrics, 60000);
+</script>
+
+<%- include('../partials/footer.ejs') %>

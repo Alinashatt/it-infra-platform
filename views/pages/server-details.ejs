@@ -24,6 +24,9 @@
     class="btn btn-dark mt-3" target="_blank">
     Open SSH Terminal
   </a>
+  
+  <a href="/monitor/<%= server.id %>">View Monitoring</a>
+  
   <!-- delete button-->
   <form action="/servers/delete/<%= server.id %>" method="POST" style="display:inline;">
     <button type="submit">Delete</button>
