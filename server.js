@@ -12,6 +12,11 @@ import { Client } from "ssh2";
 
 import monitoringRoutes from "./routes/monitoring.js"; // import monitoring routes
 
+import backupRoutes from "./routes/backup.js";
+import restoreRoutes from "./routes/restore.js";
+
+
+
 dotenv.config();
 const app = express();
 app.use(express.json());
@@ -28,6 +33,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // 🧭 Routers
 app.use("/servers", serversRouter);
 app.use("/monitor", monitoringRoutes); // ✅ هنا مكانها الصح بعد تعريف app
+app.use("/aws", backupRoutes);
+app.use("/restore", restoreRoutes);
 
 // 🏠 الصفحة الرئيسية
 app.get("/", async (req, res) => {

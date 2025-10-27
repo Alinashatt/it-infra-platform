@@ -273,4 +273,44 @@ router.get("/:id/ssh", async (req, res) => {
   }
 });
 
+import { EC2Client, CreateImageCommand } from "@aws-sdk/client-ec2";
+
+// 🧱 CREATE BACKUP (AMI)
+router.post("/backup/create/:instanceId", async (req, res) => {
+  const { instanceId } = req.params;
+
+  try {
+    const ec2 = new EC2Client({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+
+    const imageName = `backup-${instanceId}-${Date.now()}`;
+
+    const command = new CreateImageCommand({
+      InstanceId: instanceId,
+      Name: imageName,
+      NoReboot: true, // ميعملش reboot للسيرفر أثناء الـ snapshot
+    });
+
+    const response = await ec2.send(command);
+    console.log("✅ Backup (AMI) created:", response.ImageId);
+
+    // (اختياري) خزّن الـ AMI ID في قاعدة البيانات
+    await pool.query("UPDATE servers SET ami_id=$1 WHERE instance_id=$2", [
+      response.ImageId,
+      instanceId,
+    ]);
+
+    res.send(`✅ Backup created successfully with AMI ID: ${response.ImageId}`);
+  } catch (err) {
+    console.error("❌ Backup creation error:", err);
+    res.status(500).send("Error creating backup");
+  }
+});
+
+
 export default router;

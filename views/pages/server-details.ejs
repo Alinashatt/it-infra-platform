@@ -31,6 +31,19 @@
   <form action="/servers/delete/<%= server.id %>" method="POST" style="display:inline;">
     <button type="submit">Delete</button>
   </form>
+  
+  <form action="/aws/create/<%= server.instance_id %>" method="POST">
+    <button class="btn btn-warning mt-3">💾 Create Backup</button>
+  </form>
+
+  <% if (server.ami_id) { %>
+    <form action="/restore/from-ami/<%= server.ami_id %>" method="POST">
+      <button class="btn btn-success mt-2">♻️ Restore Server</button>
+    </form>
+  <% } else { %>
+    <p class="text-muted mt-2">No backup created yet.</p>
+  <% } %>
+
 
 </section>
 
