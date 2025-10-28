@@ -51,7 +51,7 @@ resource "aws_security_group" "instance_sg" {
   }
 }
 
-resource "aws_instance" "web" {
+resource "aws_instance" "web" { // hena ba3mel el instance bta3i 
   ami           = var.os == "ubuntu" ? data.aws_ami.ubuntu.id : data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
   key_name      = "myDeffaultKeyPair" // el key pair ele ana 3amltaha fel AWS console 3ashan a3mel connect 3ala el instance b SSH

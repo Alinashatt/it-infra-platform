@@ -4,6 +4,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { pool } from "./db/connections.js";
 import serversRouter from "./routes/servers.js";
+import session from "express-session";
+import authRoutes from "./routes/auth.js";
+import { isAuthenticated } from "./middleware/isAuthenticated.js";
+
 
 // --- SOCKET.IO SETUP FOR SSH TERMINAL ---
 import { Server } from "socket.io";
@@ -20,10 +24,23 @@ import settingsRoutes from "./routes/settings.js";
 
 
 
-dotenv.config();
+dotenv.config({path:"./.env"});
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(session({
+  secret: process.env.SESSION_SECRET || "supersecretkey",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false }
+}));
+app.use("/",authRoutes);
+
+app.use((req, res, next) => {
+  res.locals.user = req.session.user; // ده اللي بيخلي الuser متاح في كل الصفحات
+  next();
+});
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,14 +51,16 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
 // 🧭 Routers
+app.use(isAuthenticated);
 app.use("/servers", serversRouter);
-app.use("/monitor", monitoringRoutes); // ✅ هنا مكانها الصح بعد تعريف app
+app.use("/monitor", monitoringRoutes);
 app.use("/aws", backupRoutes);
 app.use("/restore", restoreRoutes);
 app.use("/settings", settingsRoutes);
 
+
 // 🏠 الصفحة الرئيسية
-app.get("/", async (req, res) => {
+app.get("/", isAuthenticated, async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM servers ORDER BY created_at DESC");
     res.render("pages/index", { title: "Dashboard", servers: result.rows });
@@ -52,7 +71,7 @@ app.get("/", async (req, res) => {
 });
 
 // 🖥️ صفحة إنشاء السيرفر
-app.get("/create-server", (req, res) =>
+app.get("/create-server", isAuthenticated, (req, res) =>
   res.render("pages/create-server", { title: "Create Server" })
 );
 

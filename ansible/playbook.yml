@@ -2,22 +2,20 @@
   hosts: all
   become: true
   vars:
-    selected_apps: "{{ apps | default([]) }}"  # دي بتيجي من الـ Node.js app
+    selected_apps: "{{ apps | default([]) }}"  # Node.js app
 
   tasks:
-    # 🧱 تحديث النظام
     - name: Update system packages
       package:
         name: "*"
         state: latest
 
-    # 🌐 تمكين repo الخاص بـ Nginx على Amazon Linux
     - name: Enable Nginx repository on Amazon Linux
       when: ansible_distribution == "Amazon"
       command: amazon-linux-extras enable nginx1
       ignore_errors: yes
 
-    # 🌐 Install Nginx
+    
     - name: Install Nginx
       when: "'nginx' in selected_apps"
       package:
@@ -33,7 +31,7 @@
         enabled: true
       ignore_errors: yes
 
-    # 🐳 Install Docker
+    # Install Docker
     - name: Install dependencies for Docker (Ubuntu)
       when: "'docker' in selected_apps and ansible_distribution == 'Ubuntu'"
       package:
@@ -90,7 +88,7 @@
         enabled: true
       ignore_errors: yes
 
-    # 🟢 Install Node.js
+    # Install Node.js
     - name: Install Node.js
       when: "'nodejs' in selected_apps"
       package:

@@ -1,4 +1,9 @@
 <header class="header">
+  <% if (typeof user !== 'undefined') { %>
+  <a href="/logout" class="btn btn-danger">Logout</a>
+<% } else { %>
+  <a href="/login" class="btn btn-primary">Login</a>
+<% } %>
   <h1>IT Infrastructure Automation Platform</h1>
   <nav>
     <a href="/">Dashboard</a>

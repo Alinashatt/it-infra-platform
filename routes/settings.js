@@ -5,29 +5,38 @@ import dotenv from "dotenv";
 dotenv.config();
 const router = express.Router();
 
-// 📄 عرض صفحة الإعدادات
+// 🧭 عرض صفحة الإعدادات
 router.get("/", (req, res) => {
   res.render("pages/settings", {
     title: "Settings",
-    awsAccessKey: process.env.AWS_ACCESS_KEY_ID || "",
-    awsSecretKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-    awsRegion: process.env.AWS_REGION || "",
+    env: {
+      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || "",
+      AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || "",
+      AWS_REGION: process.env.AWS_REGION || "",
+    },
   });
 });
 
-// 💾 تحديث بيانات الإعدادات
+// 💾 تحديث القيم
 router.post("/update", (req, res) => {
-  const { awsAccessKey, awsSecretKey, awsRegion } = req.body;
+  const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION } = req.body;
 
-  // نكتب القيم الجديدة في .env
-  const newEnvContent = `
-AWS_ACCESS_KEY_ID=${awsAccessKey}
-AWS_SECRET_ACCESS_KEY=${awsSecretKey}
-AWS_REGION=${awsRegion}
+  const newEnv = `
+PGHOST=${process.env.PGHOST}
+PGUSER=${process.env.PGUSER}
+PGPASSWORD=${process.env.PGPASSWORD}
+PGDATABASE=${process.env.PGDATABASE}
+PGPORT=${process.env.PGPORT}
+
+AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+AWS_REGION=${AWS_REGION}
+
+SESSION_SECRET=${process.env.SESSION_SECRET}
 `;
 
-  fs.writeFileSync(".env", newEnvContent);
-  console.log("✅ AWS Settings updated successfully!");
+  fs.writeFileSync(".env", newEnv);
+  dotenv.config(); // reload .env
 
   res.redirect("/settings");
 });
