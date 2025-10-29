@@ -1,0 +1,186 @@
+/* ===== GENERAL ===== */
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #f8f9fa;
+  margin: 0;
+  padding: 0;
+  color: #212529;
+}
+
+a {
+  text-decoration: none;
+}
+
+.container {
+  width: 90%;
+  margin: auto;
+  max-width: 1200px;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  background-color: #1f2937;
+  color: white;
+  padding: 15px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.navbar .logo {
+  font-size: 1.4rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-links a {
+  color: #ddd;
+  margin: 0 12px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-links a:hover {
+  color: #fff;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-primary {
+  border: 1px solid #007bff;
+  color: #007bff;
+}
+
+.btn-outline-primary:hover {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-outline-danger {
+  border: 1px solid #dc3545;
+  color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  background-color: #1f2937;
+  color: #ccc;
+  text-align: center;
+  padding: 15px 0;
+  margin-top: 50px;
+  font-size: 0.9rem;
+}
+
+/* ===== DASHBOARD STYLING ===== */
+.card {
+  border: none;
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.card-title {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.card-footer .btn {
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 6px 0;
+}
+
+/* ===== SERVER DETAILS STYLING ===== */
+.table th {
+  width: 200px;
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.table td {
+  background-color: #fff;
+}
+
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* ===== CREATE SERVER PAGE ===== */
+.card {
+  border-radius: 15px;
+  background-color: #fff;
+}
+
+.form-label {
+  color: #333;
+}
+
+.btn {
+  font-weight: 600;
+  border-radius: 8px;
+  transition: 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* === Auth Pages Centering === */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh; /* علشان يجي في النص بالضبط */
+}
+
+.auth-card {
+  width: 350px;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.auth-card h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.auth-card button {
+  width: 100%;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #0d1117;
+  color: #aaa;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 14px;
+  border-top: 1px solid #222;
+}

@@ -22,12 +22,17 @@ import restoreRoutes from "./routes/restore.js";
 import settingsRoutes from "./routes/settings.js";
 
 
+import expressLayouts from "express-ejs-layouts";
+
 
 
 dotenv.config({path:"./.env"});
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(expressLayouts);
+app.set("layout", "layout"); // layout.ejs موجود في views
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "supersecretkey",
   resave: false,

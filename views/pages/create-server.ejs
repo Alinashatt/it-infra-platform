@@ -1,45 +1,77 @@
-<%- include('../partials/header.ejs') %>
 
-<section>
-  <h2>Create New Server</h2>
-  <form action="/servers" method="POST">
-    <input type="text" name="name" placeholder="Server Name" required /> 
+<div class="container mt-5">
+  <div class="card shadow-sm border-0 p-4">
+    <h2 class="text-center mb-4 text-primary fw-bold">🚀 Create a New Server</h2>
+    <p class="text-muted text-center mb-4">Fill out the details below to launch a new EC2 instance.</p>
 
-    <label for="instance_type">Instance Type:</label>
-    <select name="instance_type" id="instance_type" required>
-      <option value="t2.micro">t2.micro (1GB RAM)</option>
-      <option value="t2.medium">t2.medium (4GB RAM)</option>
-      <option value="t3.micro">t3.micro (8GB RAM)</option>
-      <option value="t3.medium">t3.medium (8GB RAM)</option>
-      <option value="t3.large">t3.large (8GB RAM)</option>
+    <form action="/servers" method="POST">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="name" class="form-label fw-semibold">Server Name</label>
+          <input type="text" name="name" id="name" class="form-control" placeholder="e.g. MyServer01" required>
+        </div>
 
-    </select>
+        <div class="col-md-6 mb-3">
+          <label for="os" class="form-label fw-semibold">Operating System</label>
+          <select name="os" id="os" class="form-select" required>
+            <option value="">Select OS</option>
+            <option value="ubuntu">Ubuntu</option>
+            <option value="amazon-linux">Amazon Linux</option>
+            <option value="debian">Debian</option>
+          </select>
+        </div>
 
-    <label for="os">Operating System:</label>
-    <select name="os" id="os" required>
-      <option value="ubuntu">Ubuntu</option>
-      <option value="amazon-linux">Amazon Linux</option>
-    </select>
+        <div class="col-md-6 mb-3">
+          <label for="instanceType" class="form-label fw-semibold">Instance Type</label>
+          <select name="instance_type" id="instanceType" class="form-select" required>
+            <option value="">Select Instance Type</option>
+            <option value="t2.micro">t2.micro</option>
+            <option value="t3.micro">t3.micro</option>
+            <option value="t3.small">t3.small</option>
+          </select>
+        </div>
 
-    <label for="region">Region:</label>
-    <select name="region" id="region" required>
-      <option value="us-east-1">US East 1</option>
-      <option value="eu-central-1">EU Central 1</option>
-      <option value="eu-north-1">EU North 1</option>
-    </select>
+        <div class="col-md-6 mb-3">
+          <label for="region" class="form-label fw-semibold">AWS Region</label>
+          <select name="region" id="region" class="form-select" required>
+            <option value="">Select AWS Region</option>
+            <option value="us-east-1">US East (N. Virginia)</option>
+            <option value="eu-north-1">EU (Stockholm)</option>
+            <option value="ap-south-1">Asia Pacific (Mumbai)</option>
+          </select>
+        </div>
 
-    <label for="storage">Storage (GB):</label>
-    <input type="number" name="storage" id="storage" placeholder="Storage (GB)" min="8" value="8" required />
+        <div class="col-md-6 mb-3">
+          <label for="storage" class="form-label fw-semibold">Storage (GB)</label>
+          <input type="number" name="storage" id="storage" class="form-control" value="8" min="8" max="1000" required>
+        </div>
 
-    <label>Applications to Install:</label><br>
-    <input type="checkbox" name="apps" value="nginx"> Nginx<br>
-    <input type="checkbox" name="apps" value="docker"> Docker<br>
-    <input type="checkbox" name="apps" value="nodejs"> Node.js<br>
-    <input type="checkbox" name="apps" value="python"> Python<br>
+        <div class="col-md-6 mb-3">
+          <label for="apps" class="form-label fw-semibold">Pre-installed Apps</label>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="apps" value="nginx" id="nginx">
+            <label class="form-check-label" for="nginx">Nginx</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="apps" value="docker" id="docker">
+            <label class="form-check-label" for="docker">Docker</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="apps" value="nodejs" id="nodejs">
+            <label class="form-check-label" for="nodejs">Node.js</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="apps" value="python" id="python">
+            <label class="form-check-label" for="python">Python</label>
+          </div>
+        </div>
+      </div>
 
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary px-4 py-2">Create Server</button>
+        <a href="/" class="btn btn-outline-secondary px-4 py-2 ms-2">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
 
-    <button type="submit">Create Server</button>
-  </form>
-</section>
-
-<%- include('../partials/footer.ejs') %>

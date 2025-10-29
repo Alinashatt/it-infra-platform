@@ -1,13 +1,17 @@
-<header class="header">
-  <% if (typeof user !== 'undefined') { %>
-  <a href="/logout" class="btn btn-danger">Logout</a>
-<% } else { %>
-  <a href="/login" class="btn btn-primary">Login</a>
-<% } %>
-  <h1>IT Infrastructure Automation Platform</h1>
-  <nav>
-    <a href="/">Dashboard</a>
-    <a href="/create-server">Create Server</a>
-    <a href="/settings">Settings</a>
-  </nav>
+<header class="navbar">
+  <div class="container d-flex justify-content-between align-items-center">
+    <h2 class="logo">⚙️ IT Infra Platform</h2>
+
+    <nav class="nav-links">
+      <a href="/">Dashboard</a>
+      <a href="/create-server">Create Server</a>
+      <a href="/settings">Settings</a>
+    </nav>
+
+    <% if (typeof user !== 'undefined') { %>
+      <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+    <% } else { %>
+      <a href="/login" class="btn btn-outline-primary btn-sm">Login</a>
+    <% } %>
+  </div>
 </header>

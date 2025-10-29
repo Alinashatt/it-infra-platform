@@ -1,50 +1,70 @@
-<%- include('../partials/header.ejs') %>
+<div class="container mt-5">
+  <div class="card shadow-sm border-0 p-4">
+    <% if (server) { %>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-primary mb-0"><%= server.name %></h3>
+        <span class="badge 
+          <% if (server.status === 'running') { %> bg-success 
+          <% } else if (server.status === 'provisioning') { %> bg-warning text-dark 
+          <% } else if (server.status === 'error') { %> bg-danger 
+          <% } else { %> bg-secondary <% } %>">
+          <%= server.status %>
+        </span>
+      </div>
 
-<section>
-  <h2>Server Details</h2>
+      <table class="table table-bordered align-middle">
+        <tbody>
+          <tr><th>Instance ID</th><td><%= server.instance_id %></td></tr>
+          <tr><th>Type</th><td><%= server.instance_type %></td></tr>
+          <tr><th>Region</th><td><%= server.region %></td></tr>
+          <tr><th>Storage</th><td><%= server.storage %> GB</td></tr>
+          <tr><th>OS</th><td><%= server.os %></td></tr>
+          <tr><th>Created At</th><td><%= server.created_at.toLocaleString() %></td></tr>
+          <tr><th>Public IP</th><td><%= server.public_ip || 'N/A' %></td></tr>
+        </tbody>
+      </table>
 
-  <% if (server) { %>
-    <ul>
-      <li><strong>Name:</strong> <%= server.name %></li>
-      <li><strong>Instance ID:</strong> <%= server.instance_id %></li>
-      <li><strong>Type:</strong> <%= server.instance_type %></li>
-      <li><strong>Region:</strong> <%= server.region %></li>
-      <li><strong>Storage:</strong> <%= server.storage %> GB</li>
-      <li><strong>OS:</strong> <%= server.os %></li>
-      <li><strong>Status:</strong> <%= server.status %></li>
-      <li><strong>Created At:</strong> <%= server.created_at.toLocaleString() %></li>
-    </ul>
+      <div class="d-flex gap-2 mt-3">
+        <a href="/servers/<%= server.id %>/ssh?ip=<%= server.public_ip %>&user=<%= server.os === 'ubuntu' ? 'ubuntu' : 'ec2-user' %>"
+           class="btn btn-dark flex-fill" target="_blank">🖥 SSH Access</a>
 
-    <a href="/">⬅ Back to Dashboard</a>
-  <% } else { %>
-    <p>Server not found.</p>
-  <% } %>
-    
-  <a href="/servers/<%= server.id %>/ssh?ip=<%= server.public_ip %>&user=<%= server.os === 'ubuntu' ? 'ubuntu' : 'ec2-user' %>" 
-    class="btn btn-dark mt-3" target="_blank">
-    Open SSH Terminal
-  </a>
-  
-  <a href="/monitor/<%= server.id %>">View Monitoring</a>
-  
-  <!-- delete button-->
-  <form action="/servers/delete/<%= server.id %>" method="POST" style="display:inline;">
-    <button type="submit">Delete</button>
-  </form>
-  
-  <form action="/aws/create/<%= server.instance_id %>" method="POST">
-    <button class="btn btn-warning mt-3">💾 Create Backup</button>
-  </form>
+        <a href="/monitor/<%= server.id %>" class="btn btn-outline-info flex-fill">📈 Monitor</a>
 
-  <% if (server.ami_id) { %>
-    <form action="/restore/from-ami/<%= server.ami_id %>" method="POST">
-      <button class="btn btn-success mt-2">♻️ Restore Server</button>
-    </form>
-  <% } else { %>
-    <p class="text-muted mt-2">No backup created yet.</p>
-  <% } %>
+        <form action="/aws/create/<%= server.instance_id %>" method="POST" class="flex-fill">
+          <button class="btn btn-outline-warning w-100">💾 Backup</button>
+        </form>
 
+        <% if (server.ami_id) { %>
+          <form action="/restore/from-ami/<%= server.ami_id %>" method="POST" class="flex-fill">
+            <button class="btn btn-outline-success w-100">♻️ Restore</button>
+          </form>
+        <% } else { %>
+          <button class="btn btn-outline-secondary w-100" disabled>♻️ Restore</button>
+        <% } %>
 
-</section>
+        <form
+          action="/servers/delete/<%= server.id %>"
+          method="POST"
+          onsubmit="return confirmDelete()"
+          style="display:inline;"
+        >
+          <button type="submit" class="btn btn-danger mt-3">🗑️ Delete Server</button>
+        </form>
 
-<%- include('../partials/footer.ejs') %>
+        <script>
+          function confirmDelete() {
+            return confirm("⚠️ Are you sure you want to delete this server? This action cannot be undone!");
+          }
+        </script>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="/" class="btn btn-secondary px-4">⬅ Back to Dashboard</a>
+      </div>
+
+    <% } else { %>
+      <div class="alert alert-warning">Server not found.</div>
+    <% } %>
+  </div>
+</div>
+

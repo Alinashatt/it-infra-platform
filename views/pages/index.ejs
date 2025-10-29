@@ -1,24 +1,42 @@
-<%- include('../partials/header.ejs') %>
 
-<section>
-  <h2>Dashboard</h2>
-  <p>Welcome to your server management panel.</p>
+
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-dark">🧩 Dashboard</h2>
+    <a href="/create-server" class="btn btn-primary">+ Create Server</a>
+  </div>
 
   <% if (servers && servers.length > 0) { %>
-    <ul>
+    <div class="row">
       <% servers.forEach(server => { %>
-        <li>
-          <strong><%= server.name %></strong> — <%= server.status %> 
-          (<%= server.instance_type %>, <%= server.region %>)
-
-          <!-- servers details link-->
-          <a href="/servers/<%= server.id %>">View</a>
-        </li>
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+              <h5 class="card-title text-primary"><%= server.name %></h5>
+              <p class="mb-1"><strong>Status:</strong> 
+                <span class="badge 
+                  <% if (server.status === 'running') { %> bg-success 
+                  <% } else if (server.status === 'provisioning') { %> bg-warning text-dark 
+                  <% } else if (server.status === 'error') { %> bg-danger 
+                  <% } else { %> bg-secondary <% } %>">
+                  <%= server.status %>
+                </span>
+              </p>
+              <p class="mb-1"><strong>Type:</strong> <%= server.instance_type %></p>
+              <p class="mb-1"><strong>Region:</strong> <%= server.region %></p>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between">
+              <a href="/servers/<%= server.id %>" class="btn btn-sm btn-outline-primary w-100 me-1">Details</a>
+            </div>
+          </div>
+        </div>
       <% }) %>
-    </ul>
+    </div>
   <% } else { %>
-    <p>No servers found yet.</p>
+    <div class="alert alert-secondary text-center">
+      No servers found yet. Create your first one!
+    </div>
   <% } %>
-</section>
+</div>
 
-<%- include('../partials/footer.ejs') %>
+
