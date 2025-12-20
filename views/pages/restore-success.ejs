@@ -1,0 +1,16 @@
+
+<div class="container mt-5 text-center">
+  <div class="card shadow-sm p-5 border-0">
+    <h2 class="text-success fw-bold mb-4">✅ Server Restored Successfully!</h2>
+    <p class="text-muted mb-3">Your server has been successfully restored from backup <strong><%= amiId %></strong>.</p>
+
+    <div class="alert alert-info mb-4">
+      <strong>New Instance ID:</strong> <%= instanceId %>
+    </div>
+
+    <div class="mt-4">
+      <a href="/" class="btn btn-primary px-4">⬅ Back to Dashboard</a>
+      <a href="/servers" class="btn btn-outline-secondary px-4">View All Servers</a>
+    </div>
+  </div>
+</div>

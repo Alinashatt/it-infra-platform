@@ -35,7 +35,11 @@ router.post("/create/:instanceId", async (req, res) => {
     // ✅ حفظ الـ AMI في قاعدة البيانات
     await pool.query("UPDATE servers SET ami_id=$1 WHERE instance_id=$2", [amiId, instanceId]);
 
-    res.json({ message: "✅ Backup started successfully and saved to DB", amiId });
+    res.render("pages/backup-success", {
+      title: "Backup Created",
+      amiId,
+    });
+
   } catch (err) {
     console.error("Backup error:", err);
     res.status(500).json({ error: err.message });

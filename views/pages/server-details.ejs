@@ -35,8 +35,8 @@
         </form>
 
         <% if (server.ami_id) { %>
-          <form action="/restore/from-ami/<%= server.ami_id %>" method="POST" class="flex-fill">
-            <button class="btn btn-outline-success w-100">♻️ Restore</button>
+          <form action="/restore/select/<%= server.instance_id %>" method="get">
+            <button class="btn btn-outline-success mt-2">♻️ Restore Server</button>
           </form>
         <% } else { %>
           <button class="btn btn-outline-secondary w-100" disabled>♻️ Restore</button>

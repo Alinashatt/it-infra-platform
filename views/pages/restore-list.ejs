@@ -1,0 +1,37 @@
+
+<div class="container mt-5">
+  <h2 class="text-center mb-4">♻️ Select a Backup to Restore</h2>
+
+  <% if (backups && backups.length > 0) { %>
+    <table class="table table-hover align-middle shadow-sm">
+      <thead class="table-dark">
+        <tr>
+          <th scope="col">AMI ID</th>
+          <th scope="col">Name</th>
+          <th scope="col">Creation Date</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% backups.forEach(img => { %>
+          <tr>
+            <td><%= img.ImageId %></td>
+            <td><%= img.Name || 'Unnamed Backup' %></td>
+            <td><%= new Date(img.CreationDate).toLocaleString() %></td>
+            <td>
+              <form action="/restore/from-ami/<%= img.ImageId %>" method="POST">
+                <button class="btn btn-success btn-sm">Restore</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <p class="text-muted text-center">No backups found for your account.</p>
+  <% } %>
+
+  <div class="text-center mt-4">
+    <a href="/" class="btn btn-outline-secondary">⬅ Back to Dashboard</a>
+  </div>
+</div>

@@ -293,13 +293,13 @@ router.post("/backup/create/:instanceId", async (req, res) => {
     const command = new CreateImageCommand({
       InstanceId: instanceId,
       Name: imageName,
-      NoReboot: true, // ميعملش reboot للسيرفر أثناء الـ snapshot
+      NoReboot: true, // may3mle4 reboot lel instance 3ashan ma y2ata3sh el services
     });
 
     const response = await ec2.send(command);
     console.log("✅ Backup (AMI) created:", response.ImageId);
 
-    // (اختياري) خزّن الـ AMI ID في قاعدة البيانات
+    // khazen el AMI ID fel database
     await pool.query("UPDATE servers SET ami_id=$1 WHERE instance_id=$2", [
       response.ImageId,
       instanceId,

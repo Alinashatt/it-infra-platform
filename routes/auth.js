@@ -5,27 +5,38 @@ import { pool } from "../db/connections.js";
 
 const router = express.Router();
 
-// 🔹 صفحة التسجيل
+// ==================== REGISTER PAGE ====================
 router.get("/register", (req, res) => {
-  res.render("pages/register", { title: "Register" });
+  res.render("pages/register", { title: "Register", error: null });
 });
 
 router.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, aws_access_key, aws_secret_key, aws_region } = req.body;
 
   try {
+    // تشفير الباسورد
     const hashed = await bcrypt.hash(password, 10);
-    await pool.query("INSERT INTO users (username, password) VALUES ($1, $2)", [username, hashed]);
+
+    // إدخال البيانات في قاعدة البيانات
+    await pool.query(
+      `INSERT INTO users (username, password, aws_access_key, aws_secret_key, aws_region)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [username, hashed, aws_access_key, aws_secret_key, aws_region]
+    );
+
     res.redirect("/login");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error registering user");
+    console.error("❌ Register error:", err);
+    res.render("pages/register", {
+      title: "Register",
+      error: "❌ Error registering user. Try a different username."
+    });
   }
 });
 
-// 🔹 صفحة تسجيل الدخول
+// ==================== LOGIN PAGE ====================
 router.get("/login", (req, res) => {
-  res.render("pages/login", { title: "Login" });
+  res.render("pages/login", { title: "Login", error: null });
 });
 
 router.post("/login", async (req, res) => {
@@ -35,26 +46,36 @@ router.post("/login", async (req, res) => {
     const result = await pool.query("SELECT * FROM users WHERE username=$1", [username]);
     const user = result.rows[0];
 
-    if (!user) return res.status(400).send("User not found");
+    if (!user) {
+      return res.render("pages/login", { title: "Login", error: "❌ User not found" });
+    }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).send("Invalid credentials");
+    if (!match) {
+      return res.render("pages/login", { title: "Login", error: "❌ Invalid credentials" });
+    }
 
-    // ✅ حفظ المستخدم في السيشن
-    req.session.user = { id: user.id, username: user.username };
+    // ✅ حفظ المستخدم في السيشن + AWS credentials
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      aws_access_key: user.aws_access_key,
+      aws_secret_key: user.aws_secret_key,
+      aws_region: user.aws_region
+    };
+
     res.redirect("/");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error logging in");
+    console.error("❌ Login error:", err);
+    res.render("pages/login", { title: "Login", error: "❌ Error logging in. Please try again." });
   }
 });
 
-// 🔹 تسجيل الخروج
+// ==================== LOGOUT ====================
 router.get("/logout", (req, res) => {
   req.session.destroy(() => {
     res.redirect("/login");
   });
 });
-
 
 export default router;

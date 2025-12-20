@@ -5,3 +5,6 @@ terraform/.terraform/
 /node_modules
 *.pem
 ejs
+*.log
+.DS_Store
+
