@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { pool } from "./db/connections.js";
-import serversRouter from "./routes/servers.js";
+import serversRouter from "./routes/servers.js"; 
 import session from "express-session";
 import authRoutes from "./routes/auth.js";
 import { isAuthenticated } from "./middleware/isAuthenticated.js";
@@ -31,7 +31,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(expressLayouts);
-app.set("layout", "layout"); // layout.ejs موجود في views
+app.set("layout", "layout"); 
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "supersecretkey",
@@ -42,7 +42,7 @@ app.use(session({
 app.use("/",authRoutes);
 
 app.use((req, res, next) => {
-  res.locals.user = req.session.user; // ده اللي بيخلي الuser متاح في كل الصفحات
+  res.locals.user = req.session.user; 
   next();
 });
 
@@ -50,12 +50,11 @@ app.use((req, res, next) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 📂 إعدادات الـ EJS
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
-// 🧭 Routers
+// Routers
 app.use(isAuthenticated);
 app.use("/servers", serversRouter);
 app.use("/monitor", monitoringRoutes);
@@ -64,7 +63,6 @@ app.use("/restore", restoreRoutes);
 app.use("/settings", settingsRoutes);
 
 
-// 🏠 الصفحة الرئيسية
 app.get("/", isAuthenticated, async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM servers ORDER BY created_at DESC");
@@ -75,16 +73,15 @@ app.get("/", isAuthenticated, async (req, res) => {
   }
 });
 
-// 🖥️ صفحة إنشاء السيرفر
+
 app.get("/create-server", isAuthenticated, (req, res) =>
   res.render("pages/create-server", { title: "Create Server" })
 );
 
-// 🚀 تشغيل السيرفر
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-// 🌐 SOCKET.IO FOR SSH
+// SOCKET.IO FOR SSH
 const io = new Server(5001, {
   cors: { origin: "*" },
 });

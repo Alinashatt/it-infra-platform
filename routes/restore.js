@@ -10,7 +10,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const router = express.Router();
 
-// ✅ Middleware: إنشاء client لكل مستخدم حسب بياناته
+//enshel EC2 client with user credentials
 function createEC2Client(req) {
   return new EC2Client({
     region: req.session.user?.aws_region || process.env.AWS_REGION,
@@ -21,7 +21,7 @@ function createEC2Client(req) {
   });
 }
 
-// ==================== STEP 1: عرض صفحة اختيار الـ Backup ====================
+// ==================== est ====================
 router.get("/select/:instanceId", async (req, res) => {
   const ec2 = createEC2Client(req);
 

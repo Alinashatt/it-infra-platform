@@ -49,7 +49,7 @@ os            = "${os}"
       if (initErr) {
         await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
         console.error("❌ Terraform init error:", initStderr);
-        return res.status(500).send("Terraform init failed");
+        return res.status(500).send("Terraform init failed");// 500 internal server error
       }
 
       console.log("✅ Terraform initialized!");
@@ -76,14 +76,14 @@ os            = "${os}"
           await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["configuring", name]);
           // 4. el output bta3 el terraform in json
 
-          exec("terraform output -json", { cwd: "./terraform" }, async (outErr, outStdout, outStderr) => {
+          exec("terraform output -json", { cwd: "./terraform" }, async (outErr, outStdout, outStderr) => { //-json 3awez el output yeb2a json
             if (outErr) {
               await pool.query("UPDATE servers SET status=$1 WHERE name=$2", ["error", name]);
               console.error("❌ Terraform output error:", outStderr);
               return res.status(500).send("Terraform output failed");
             }
 
-            let outputs = {};
+            let outputs = {};// 3awez a3ml parse lel json output
             try {
               outputs = JSON.parse(outStdout.trim());
             } catch (parseErr) {
@@ -91,7 +91,7 @@ os            = "${os}"
               console.error("❌ Failed to parse Terraform output:", parseErr);
             }
 
-            const instance_id = outputs.instance_id ? outputs.instance_id.value : "unknown";
+            const instance_id = outputs.instance_id ? outputs.instance_id.value : "unknown"; 
             const public_ip = outputs.instance_public_ip ? outputs.instance_public_ip.value : null;
 
             if (public_ip) {
@@ -184,7 +184,7 @@ router.get("/", async (req, res) => {
 
 // GET /servers/:id - Display details of a specific server
 router.get("/:id", async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params; //req.params de 3awez ageb el id mn el url 3aks ll req.body elli bygeb el data mn form body
   try {
     const result = await pool.query("SELECT * FROM servers WHERE id = $1", [id]);
     if (result.rows.length === 0) {
@@ -272,45 +272,5 @@ router.get("/:id/ssh", async (req, res) => {
     res.status(500).send("Error loading SSH terminal");
   }
 });
-
-import { EC2Client, CreateImageCommand } from "@aws-sdk/client-ec2";
-
-// 🧱 CREATE BACKUP (AMI)
-router.post("/backup/create/:instanceId", async (req, res) => {
-  const { instanceId } = req.params;
-
-  try {
-    const ec2 = new EC2Client({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
-
-    const imageName = `backup-${instanceId}-${Date.now()}`;
-
-    const command = new CreateImageCommand({
-      InstanceId: instanceId,
-      Name: imageName,
-      NoReboot: true, // may3mle4 reboot lel instance 3ashan ma y2ata3sh el services
-    });
-
-    const response = await ec2.send(command);
-    console.log("✅ Backup (AMI) created:", response.ImageId);
-
-    // khazen el AMI ID fel database
-    await pool.query("UPDATE servers SET ami_id=$1 WHERE instance_id=$2", [
-      response.ImageId,
-      instanceId,
-    ]);
-
-    res.send(`✅ Backup created successfully with AMI ID: ${response.ImageId}`);
-  } catch (err) {
-    console.error("❌ Backup creation error:", err);
-    res.status(500).send("Error creating backup");
-  }
-});
-
 
 export default router;

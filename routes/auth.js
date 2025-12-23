@@ -14,10 +14,10 @@ router.post("/register", async (req, res) => {
   const { username, password, aws_access_key, aws_secret_key, aws_region } = req.body;
 
   try {
-    // تشفير الباسورد
-    const hashed = await bcrypt.hash(password, 10);
+    // hash el password
+    const hashed = await bcrypt.hash(password, 10); // salt rounds = 10
 
-    // إدخال البيانات في قاعدة البيانات
+    //eda5l el user fel database
     await pool.query(
       `INSERT INTO users (username, password, aws_access_key, aws_secret_key, aws_region)
        VALUES ($1, $2, $3, $4, $5)`,
@@ -46,7 +46,7 @@ router.post("/login", async (req, res) => {
     const result = await pool.query("SELECT * FROM users WHERE username=$1", [username]);
     const user = result.rows[0];
 
-    if (!user) {
+    if (!user) { // user not found
       return res.render("pages/login", { title: "Login", error: "❌ User not found" });
     }
 
@@ -55,7 +55,7 @@ router.post("/login", async (req, res) => {
       return res.render("pages/login", { title: "Login", error: "❌ Invalid credentials" });
     }
 
-    // ✅ حفظ المستخدم في السيشن + AWS credentials
+    // 7efz el user fel session 3ashan yeb2a logged in
     req.session.user = {
       id: user.id,
       username: user.username,
@@ -78,4 +78,4 @@ router.get("/logout", (req, res) => {
   });
 });
 
-export default router;
+export default router;  

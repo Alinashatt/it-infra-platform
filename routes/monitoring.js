@@ -16,17 +16,17 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    // جلب بيانات السيرفر من الـ DB
+    //ageb el instance ID mn el database
     const result = await pool.query("SELECT instance_id FROM servers WHERE id = $1", [id]);
     if (result.rows.length === 0) return res.status(404).send("Server not found");
 
     const instanceId = result.rows[0].instance_id;
 
-    // تحديد الفترة الزمنية
+    // ta3yeen el period
     const endTime = new Date();
-    const startTime = new Date(endTime.getTime() - 1000 * 60 * 60 * 3); // آخر 3 ساعات
+    const startTime = new Date(endTime.getTime() - 1000 * 60 * 60 * 3); // last 3 hours
 
-    // استدعاء الميتريكس
+    //esta3mel el function getMetric 3ashan tageb el metrics
     const metrics = await Promise.all([
       getMetric(instanceId, "CPUUtilization", "Average", "Percent"),
       getMetric(instanceId, "NetworkIn", "Sum", "Bytes"),
@@ -39,7 +39,7 @@ router.get("/:id", async (req, res) => {
       NetworkOut: metrics[2],
     };
 
-    // render للـ EJS
+    // render el monitoring page
     res.render("pages/monitoring", {
       title: "Server Monitoring",
       metrics: data,
